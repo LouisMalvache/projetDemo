@@ -13,7 +13,7 @@ monBouton.addEventListener('click', () => {
         body: JSON.stringify({ inputValue: monInput.value, inputValue2: monInput2.value })
     }).then(response => response.json())
     .then(data => {
-        alert(data); 
+        alert(data.message); 
     });
 });        
 

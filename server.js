@@ -35,7 +35,6 @@ app.listen(3000, () => {
 app.post('/register', (req, res) => {
     console.log('données reçues pour l\'inscription :');
     console.log(req.body);
-    res.json({ message: 'Inscription réussie !' });
    
     connection.query(
         'INSERT INTO user (login, password) VALUES (?, ?)',
