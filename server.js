@@ -32,6 +32,17 @@ app.listen(3000, () => {
     console.log('Server is running at http://localhost:3000');
 });
 
+app.get('/users', (req, res) => {
+  connection.query('SELECT * FROM user', (err, results) => {
+    if (err) {
+      console.error('Erreur lors de la récupération des utilisateurs :', err);
+      res.status(500).json({ message: 'Erreur serveur' });
+      return;
+    }
+    res.json(results);
+  });
+});
+
 app.post('/register', (req, res) => {
     console.log('données reçues pour l\'inscription :');
     console.log(req.body);
