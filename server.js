@@ -111,13 +111,14 @@ app.get('/vote-count/:userId', (req, res) => {
 // obtenir tous les votes de tous les utilisateurs
 app.get('/all-votes', (req, res) => {
     connection.query(
-        'SELECT user.id, user.login, COUNT(vote.id) as voteCount FROM user JOIN vote ON user.id = vote.idUser GROUP BY user.id, user.login ORDER BY voteCount DESC',
+        'SELECT user.id, user.login, COUNT(vote.id) as voteCount FROM user LEFT JOIN vote ON user.id = vote.idUser GROUP BY user.id, user.login ORDER BY voteCount DESC',
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de la récupération des votes :', err);
                 res.status(500).json({ message: 'Erreur serveur' });
                 return;
             }
+            console.log('Résultats all-votes:', results);
             res.json(results);
         }
     );

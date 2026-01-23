@@ -6,6 +6,31 @@ const compteur = document.getElementById('compteur');
 const userSelectBouton = document.getElementById('userSelectBouton'); 
 const voteBouton = document.getElementById('voteBouton');
 
+function afficherStatistiques() {
+    fetch('/all-votes')
+    .then(response => response.json())
+    .then(stats => {
+        console.log('Stats reçues:', stats); 
+        const statsContent = document.getElementById('statsContent');
+        
+        if (stats.length === 0) {
+            statsContent.innerHTML = '<p>Aucun vote pour le moment</p>';
+            return;
+        }
+        
+        let html = '';
+        stats.forEach((user, index) => {
+            html += `<p>${index + 1}. ${user.login} - ${user.voteCount} vote(s)</p>`;
+        });
+        
+        statsContent.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        document.getElementById('statsContent').innerHTML = '<p style="color: red;">Erreur de chargement</p>';
+    });
+}
+
 monBouton.addEventListener('click', () => {
     fetch('/register', {
         method: 'POST',
@@ -20,7 +45,6 @@ monBouton.addEventListener('click', () => {
     .then(response => response.json())
     .then(data => {
         alert(data.message);
-        // Recharger la liste des utilisateurs après inscription
         window.location.reload();
     });
 });
@@ -45,7 +69,7 @@ monBouton2.addEventListener('click', () => {
 });
 
 window.onload = () => {
-    // Charger la liste des utilisateurs
+    
     fetch('/users')
     .then(response => response.json())
     .then(users => {
@@ -58,6 +82,7 @@ window.onload = () => {
         });
     });
     
+    afficherStatistiques();
 }
 
 userSelectBouton.addEventListener('click', () => {
@@ -75,7 +100,7 @@ userSelectBouton.addEventListener('click', () => {
 voteBouton.addEventListener('click', () => {
     const usersList = document.getElementById('userLists');
     const selectedUserId = usersList.value;
-    // Vérifier si un utilisateur est sélectionné au vote
+    
     if (!selectedUserId) {
         alert('Veuillez sélectionner un utilisateur');
         return;
@@ -97,16 +122,8 @@ voteBouton.addEventListener('click', () => {
     .then(data => {
         alert(`Vote enregistré pour ${userName} !`);
     })
-});
-
-fetch('/all-vote')
-    .then(response => response.json())
-    .then(votes => {
-        const usersList = document.getElementById('userLists');
-        votes.forEach(vote => {
-            const option = document.createElement('option');
-            option.value = vote.id;
-            option.text = `${vote.login} - Votes: ${vote.voteCount}`;
-            usersList.appendChild(option);
-        });
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur lors de l\'enregistrement du vote');
     });
+});
