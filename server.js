@@ -30,7 +30,7 @@ app.get('/info', (req, res) => {
 });
 
 
-app.get('/users', (req, res) => {
+app.get('/user', (req, res) => {
     connection.query('SELECT * FROM user', (err, results) => {
         if (err) {
             console.error('Erreur lors de la récupération des utilisateurs :', err);
@@ -47,7 +47,7 @@ app.post('/register', (req, res) => {
    
     connection.query(
         'INSERT INTO user (login, password) VALUES (?, ?)',
-        [req.body.inputValue, req.body.inputValue2],
+        [req.body.login, req.body.password],
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de l\'insertion dans la base de données :', err);
@@ -60,20 +60,50 @@ app.post('/register', (req, res) => {
     );
 });
 
+
+app.post('/connexion', (req, res) => {  
+  console.log(req.body);
+  //on récupère le login et le password
+  const { login, password } = req.body;
+  connection.query('SELECT * FROM user WHERE login = ? AND password = ?', [login, password], (err, results) => {
+      if (err) {
+        console.error('Erreur lors de la vérification des identifiants :', err);
+        res.status(500).json({ message: 'Erreur serveur' });
+        return;
+      }
+      if (results.length === 0) {
+        res.status(401).json({ message: 'Identifiants invalides' });
+        return;
+      }
+      // Identifiants valides 
+      //renvoi les informations du user
+      res.json({ message: 'Connexion réussie !', user: results[0] });
+    });
+});
+
+
 app.post('/vote', (req, res) => {
     console.log('Vote reçu :');
     console.log(req.body);
     
     const idUser = req.body.idUser;
+    const idElecteur = req.body.idElecteur;
     
     if (!idUser) {
         res.status(400).json({ message: 'Utilisateur non sélectionné' });
         return;
     }
+
+    if (!idElecteur) {
+        res.status(400).json({ message: 'Vous devez être connecté pour voter' });
+        return;
+    }
     
     connection.query(
-        'INSERT INTO vote (idUser) VALUES (?)',
-        [idUser],
+        'INSERT INTO vote (idUser, idElecteur) VALUES (?, ?)',
+        [idUser, idElecteur],
+    
+
         (err, results) => {
             if (err) {
                 console.error('Erreur lors de l\'insertion du vote :', err);
@@ -83,8 +113,11 @@ app.post('/vote', (req, res) => {
             console.log('Vote enregistré avec succès, ID du vote :', results.insertId);
             res.json({ message: 'Vote enregistré avec succès !' });
         }
-    );
+);
 });
+
+
+
 
 app.listen(3000, () => {
     console.log('Server is running at http://localhost:3000');
@@ -123,3 +156,29 @@ app.get('/all-votes', (req, res) => {
         }
     );
 });
+
+
+
+
+// Route pour récupérer les infos d'un utilisateur connecté
+
+app.get('/connecte/:userId', (req, res) => {
+    const userId = req.params.userId;
+    
+    connection.query(
+        'SELECT * FROM user WHERE id = ?',
+        [userId],
+        (err, results) => {
+            if (err) {
+                console.error('Erreur lors de la récupération des informations utilisateur :', err);
+                res.status(500).json({ message: 'Erreur serveur' });
+                return;
+            }       
+            if (results.length === 0) {
+                res.status(404).json({ message: 'Utilisateur non trouvé' });
+                return;
+            } 
+            res.json(results[0]);
+        }
+    );
+}   );

@@ -5,14 +5,24 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
     <h1>bienvenu sur la page d'accueil</h1>
-    <input type="text" id="monInput" placeholder="Entrez votre login">
-    <input type="password" id="monInput2" placeholder="Entrez votre mot de passe">
-    <input type="button" id="monBouton" value="envoie">
-    <input type="button" id="monBouton2" value="clique pour rien si tu te fais chier">
-    <span id="compteur">0</span>
+    
+<div id="userInfo" style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
+    Utilisateur connecté : <span id="connectedUser">Aucun</span>
+    <button id="deconnectButton" onclick="deconnecter()" style="margin-left: 10px;">Se déconnecter</button>
+</div>
+
+    <input type="text" id="loginInput" placeholder="Login">
+    <input type="password" id="passwordInput" placeholder="Password">
+    <input type="button" id="registerButton" value="S'inscrire">
+    <input type="button" id="loginButton" value="Se connecter">
+    <div id="authMessage"></div>
+
+
     <br><br>
-    <select id="userLists">
+
+    <select id="userList">
         <option value="">Sélectionnez un utilisateur</option>
     </select>
     <input type="button" id="userSelectBouton" value="Sélectionner l'utilisateur">
@@ -25,3 +35,5 @@
 </body>
 <script src="main.js"></script>
 </html>
+
+

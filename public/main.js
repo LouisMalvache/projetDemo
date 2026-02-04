@@ -1,10 +1,15 @@
-const monInput = document.getElementById('monInput');
-const monInput2 = document.getElementById('monInput2');
-const monBouton = document.getElementById('monBouton');
+const loginInput = document.getElementById('loginInput');
+const passwordInput = document.getElementById('passwordInput');
+
+const registerBouton = document.getElementById('registerButton');
+const loginBouton = document.getElementById('loginButton');
 const monBouton2 = document.getElementById('monBouton2');
 const compteur = document.getElementById('compteur');
 const userSelectBouton = document.getElementById('userSelectBouton'); 
 const voteBouton = document.getElementById('voteBouton');
+
+
+//afficher les statistiques de votes 
 
 function afficherStatistiques() {
     fetch('/all-votes')
@@ -31,15 +36,19 @@ function afficherStatistiques() {
     });
 }
 
-monBouton.addEventListener('click', () => {
+
+
+// Inscription
+
+registerBouton.addEventListener('click', () => {
     fetch('/register', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-            inputValue: monInput.value, 
-            inputValue2: monInput2.value 
+            login: loginInput.value, 
+            password: passwordInput.value 
         })
     })
     .then(response => response.json())
@@ -49,81 +58,139 @@ monBouton.addEventListener('click', () => {
     });
 });
 
-monBouton2.addEventListener('click', () => {
-    if (compteur.textContent === '0') {
-        compteur.textContent = '1';
-    } else {
-        compteur.textContent = '0';
-    }
+// Connexion
+const loginButton = document.getElementById('loginButton');
+loginButton.addEventListener('click', () => {
+    const loginInput = document.getElementById('loginInput').value;
+    const passwordInput = document.getElementById('passwordInput').value;
     
-    fetch('/info', {
-        method: 'GET',
+    fetch('/connexion', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ 
+            login: loginInput,  
+            password: passwordInput
+        })
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.cle1);
+        alert(data.message);    
+        console.log(data.user.id)
+        localStorage.setItem('userId', data.user.id);
+        localStorage.setItem('userLogin', data.user.login); // Sauvegarder le login aussi
+        
+        // Afficher les infos de l'utilisateur connecté
+        afficherUtilisateurConnecte();
     });
 });
 
-window.onload = () => {
+// Afficher les informations de l'utilisateur connecté
+function afficherUtilisateurConnecte() {
+    const userId = localStorage.getItem('userId');
+    const connectedUserSpan = document.getElementById('connectedUser');
     
-    fetch('/users')
+    if (!userId) {
+        connectedUserSpan.textContent = 'Aucun';
+        return;
+    }
+    
+    fetch('/connecte/' + userId)
     .then(response => response.json())
-    .then(users => {
-        const usersList = document.getElementById('userLists');
-        users.forEach(user => {
+    .then(user => {
+
+    // AFFICHER dans le HTML
+    connectedUserSpan.textContent = user.login;
+    })
+
+}
+
+
+
+
+// Charger la liste des utilisateurs pour le vote
+window.onload = () => {
+    // Afficher l'utilisateur connecté si présent
+    afficherUtilisateurConnecte();
+    
+    fetch('/user')
+    .then(response => response.json())
+    .then(user => {
+        const userList = document.getElementById('userList');
+        user.forEach(user => {
             const option = document.createElement('option');
             option.value = user.id;
             option.text = user.login;
-            usersList.appendChild(option);
+            userList.appendChild(option);
         });
     });
     
     afficherStatistiques();
 }
 
+// Sélectionner un utilisateur
+
 userSelectBouton.addEventListener('click', () => {
-    const usersList = document.getElementById('userLists'); 
-    const selectedUserId = usersList.value;
+    const userList = document.getElementById('userList'); 
+    const selectedUserId = userList.value;
     
     if (!selectedUserId) {
         alert('Veuillez sélectionner un utilisateur');
     } else {
-        const selectedOption = usersList.options[usersList.selectedIndex];
+        const selectedOption = userList.options[userList.selectedIndex];
         alert('Utilisateur sélectionné : ' + selectedOption.text + ' (ID: ' + selectedUserId + ')');
     }
 });
 
+
+// Voter pour l'utilisateur sélectionné
+
 voteBouton.addEventListener('click', () => {
-    const usersList = document.getElementById('userLists');
-    const selectedUserId = usersList.value;
-    
+    const userList = document.getElementById('userList');
+    const selectedUserId = userList.value;
+
     if (!selectedUserId) {
         alert('Veuillez sélectionner un utilisateur');
         return;
     }
-
-    const selectedOption = usersList.options[usersList.selectedIndex];
+// Récupérer le nom de l'utilisateur sélectionné
+    const selectedOption = userList.options[userList.selectedIndex];
     const userName = selectedOption.text;
 
+    const idElecteur = localStorage.getItem('userId');
+// Vérifier si l'électeur est connecté
+    if (!idElecteur) {
+        alert('Vous devez vous connecter avant de voter');
+        return;
+    }
+// Envoyer le vote au serveur
     fetch('/vote', {    
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-            idUser: selectedUserId 
+            idUser: selectedUserId,
+            idElecteur: idElecteur
         })
     })
     .then(response => response.json())
     .then(data => {
-        alert(`Vote enregistré pour ${userName} !`);
+        alert(data.message);
+        afficherStatistiques();
     })
     .catch(error => {
         console.error('Erreur:', error);
         alert('Erreur lors de l\'enregistrement du vote');
     });
 });
+
+
+function deconnecter() {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userLogin');
+    document.getElementById('connectedUser').textContent = 'Aucun';
+    alert('Vous êtes déconnecté');
+    window.location.reload(); 
+}
